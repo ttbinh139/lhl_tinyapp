@@ -29,7 +29,6 @@ app.get('/urls', (request, response) => {
 
 app.get("/urls/:shortURL", (request, response) => {
   const url = { shortURL: request.params.shortURL, longURL: urlDatabases[request.params.shortURL] };
-  //console.log(url);
   response.render("pages/urls_show", url);
 });
 
@@ -39,16 +38,14 @@ app.get('/new', (request, response) => {
 });
 
 app.post("/new", (request, response) => {
-  const randomString = generateRandomString();
+  const randomString = generateRandomString(6);
   urlDatabases[randomString] = request.body.longURL;
   response.redirect(`/urls/${randomString}`);
-  //console.log(request.body);  // Log the POST request body to the console
-  //response.send("Ok");         // Respond with 'Ok' (we will replace this)
 });
 
-app.get("/u/:shortUrl", (request, response) => {
-  const longUrl = urlDatabases[request.params.shortUrl];
-  //console.log(longUrl);
+app.get("/u/:shortURL", (request, response) => {
+  console.log(urlDatabases);
+  const longUrl = urlDatabases[request.params.shortURL];
   response.redirect(longUrl);
 })
 
