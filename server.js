@@ -1,18 +1,30 @@
+const { response } = require("express");
 const express = require("express")
 const app = express();
 const PORT = 8080;
+const urlDatabases = {
+  '1a2b3c' : "https://www.lighthouselabs.ca",
+  '2b3c4d' : "https:///www.google.ca"
+}
 
-const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
-};
+// Set template engine
+app.set('view engine', 'ejs');
 
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
+// Routing index page
+app.get('/', (request, response) => {
+  const urls = {urls: urlDatabases};
+  response.render("pages/index.ejs", urls);
 });
 
-app.get('/', (request, response) => {
-  response.send('Hello world');
+app.get("/urls/:shortURL", (request, response) => {
+  const url = { shortURL: request.params.shortURL, longURL: urlDatabases[request.params.shortURL] };
+  //console.log(url);
+  response.render("pages/urls_show", url);
+});
+
+// About pages
+app.get('/about', (request, response) => {
+  response.render("pages/about");
 });
 
 app.listen(PORT, () => {
