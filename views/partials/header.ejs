@@ -7,8 +7,23 @@
     <li class="nav-item">
       <a class="nav-link" href="/new">Create new URL</a>
     </li>
+    
     <!-- <li class="nav-item">
       <a class="nav-link" href="/about">About</a>
     </li> -->
+  </ul>
+  <ul class="navbar-nav ml-auto">
+    <li class="nav-item">
+      <% if (templateVars.username) { %>
+        <form class="form-inline" method="post" action="/logout">
+          <div class="form-group mb-2">
+            <span class="pr-3">Hello <%= templateVars.username %></span>
+            <button type="submit" class="btn btn-primary">Logout</button>
+          </div>
+        </form>
+        <% } else { %>
+      <a class="nav-link" href="/login">Login</a>
+      <% } %>
+    </li>
   </ul>
 </nav>
