@@ -40,6 +40,21 @@ const checkExistedEmail = function(email) {
   return false;
 }
 
+const checkValidUser = function(email, password) {
+  for (const idx in users) {
+    //console.log(user);
+    //console.log(email);
+    ///console.log(password);
+    //console.log("user", users[idx]);
+    if (users[idx]["email"] === email && users[idx]["password"] === password) {
+     // console.log("valid");
+      return idx;
+    }
+  }
+  return false;
+}
+
+
 // Set template engine
 app.set('view engine', 'ejs');
 
@@ -49,6 +64,7 @@ app.get('/', (request, response) => {
   const templateVars = {
     username: request.cookies["userID"]
   };
+  //response.send(templateVars);
   const urls = {urls: urlDatabases, templateVars: templateVars};
   response.render("pages/index.ejs", urls);
 });
@@ -121,17 +137,44 @@ app.get('/about', (request, response) => {
 // Login pages
 app.get('/login', (request, response) => {
   const templateVars = {
-    username: request.cookies["userID"]
+    username: request.cookies["userID"],
+    error: request.cookies["error"]
   };
+  response.clearCookie("error");
+  //response.clearCookie("username");
   response.render('pages/login', {templateVars})
 });
 
 app.post('/login', (request, response) => {
-  const username = request.body.username;
-  //response.send(username);
-  response.cookie("username", username);
-  //response.render('pages/login')
-  response.redirect("/");
+  //const userEmail = request.body.email;
+  //const userPassword = request.body.password;
+  let errorMessage = "";
+  // Check email is empty
+  if (request.body.email === "") {
+    errorMessage += "Email cannot be empty\n";
+  }
+  // Check password is empty
+  if( request.body.password === "") {
+    errorMessage += "Password cannot be empty";
+  }
+  // Check valid user information
+  let userID = false;
+  if (request.body.email !== "" && request.body.password !== "") {
+    userID = checkValidUser(request.body.email, request.body.password);
+    //response.send(userID);
+    if (userID === false) {
+      errorMessage += "Incorrect login details";
+    }
+  }
+  if (errorMessage !== "") {
+    response.cookie("error", errorMessage);
+    response.redirect('/login');
+  } else {
+    //response.send(username);
+    response.cookie("userID", userID);
+    //response.render('pages/login')
+    response.redirect("/");
+  }
 });
 
 app.post("/logout", (request, response) => {
