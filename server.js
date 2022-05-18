@@ -11,9 +11,22 @@ app.use(bodyParser.urlencoded({extended: true}));
 const cookieParser = require("cookie-parser");
 app.use(cookieParser());
 
-let urlDatabases = {
+const urlDatabases = {
   '1a2b3c' : "https://www.lighthouselabs.ca",
   '2b3c4d' : "https:///www.google.ca"
+};
+
+const users = { 
+  "userRandomID": {
+    id: "userRandomID", 
+    email: "user@example.com", 
+    password: "purple-monkey-dinosaur"
+  },
+ "user2RandomID": {
+    id: "user2RandomID", 
+    email: "user2@example.com", 
+    password: "dishwasher-funk"
+  }
 }
 
 // Set template engine
@@ -23,7 +36,7 @@ app.set('view engine', 'ejs');
 app.get('/', (request, response) => {
   
   const templateVars = {
-    username: request.cookies["username"]
+    username: request.cookies["userID"]
   };
   const urls = {urls: urlDatabases, templateVars: templateVars};
   response.render("pages/index.ejs", urls);
@@ -31,7 +44,7 @@ app.get('/', (request, response) => {
 
 app.get('/urls', (request, response) => {
   const templateVars = {
-    username: request.cookies["username"]
+    username: request.cookies["userID"]
   };
   const urls = {urls: urlDatabases, templateVars: templateVars};
   response.render("pages/index.ejs", urls);
@@ -40,7 +53,7 @@ app.get('/urls', (request, response) => {
 // View a URL
 app.get("/urls/:shortURL", (request, response) => {
   const templateVars = {
-    username: request.cookies["username"]
+    username: request.cookies["userID"]
   };
   const url = { shortURL: request.params.shortURL, longURL: urlDatabases[request.params.shortURL], templateVars: templateVars };
   response.render("pages/urls_show", url);
@@ -49,7 +62,7 @@ app.get("/urls/:shortURL", (request, response) => {
 // Create new url
 app.get('/new', (request, response) => {
   const templateVars = {
-    username: request.cookies["username"]
+    username: request.cookies["userID"]
   };
   response.render("pages/new", {templateVars});
 });
@@ -97,7 +110,7 @@ app.get('/about', (request, response) => {
 // Login pages
 app.get('/login', (request, response) => {
   const templateVars = {
-    username: request.cookies["username"]
+    username: request.cookies["userID"]
   };
   response.render('pages/login', {templateVars})
 });
@@ -111,15 +124,31 @@ app.post('/login', (request, response) => {
 });
 
 app.post("/logout", (request, response) => {
-  response.clearCookie("username");
+  response.clearCookie("userID");
   response.redirect("/");
 });
 
 app.get("/register", (request, response) => {
   const templateVars = {
-    username: request.cookies["username"]
+    username: request.cookies["userID"]
   };
   response.render("pages/register", {templateVars})
+});
+
+app.post("/register", (request, response) => {
+  //response.send(request.body);
+  const newUserID = generateRandomString(6);
+  
+  const newUserObj = {
+    id: newUserID,
+    email: request.body.email,
+    password: request.body.password
+  };
+  
+  users[newUserID] = newUserObj;
+  //response.send(users);
+  response.cookie("userID", newUserID);
+  response.redirect("/");
 })
 
 app.listen(PORT, () => {
