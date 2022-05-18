@@ -49,6 +49,14 @@ app.get("/u/:shortURL", (request, response) => {
   response.redirect(longUrl);
 })
 
+app.get("/delete/:shortURL", (request, response) => {
+  //response.send(request.params);
+  const shortURL = request.params.shortURL;
+  //response.send(shortURL);
+  delete urlDatabases[shortURL];
+  response.redirect("/");
+});
+
 // About pages
 app.get('/about', (request, response) => {
   response.render("pages/about");
