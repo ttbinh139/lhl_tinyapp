@@ -115,6 +115,13 @@ app.post("/logout", (request, response) => {
   response.redirect("/");
 });
 
+app.get("/register", (request, response) => {
+  const templateVars = {
+    username: request.cookies["username"]
+  };
+  response.render("pages/register", {templateVars})
+})
+
 app.listen(PORT, () => {
   console.log(`Server running at ${PORT}`);
 });
