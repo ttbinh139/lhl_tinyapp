@@ -29,6 +29,17 @@ const users = {
   }
 }
 
+const checkExistedEmail = function(email) {
+  //let result = false;
+  for (const idx in users) {
+    //console.log(user);
+    if (users[idx]["email"] === email) {
+      return true;
+    }
+  }
+  return false;
+}
+
 // Set template engine
 app.set('view engine', 'ejs');
 
@@ -130,13 +141,34 @@ app.post("/logout", (request, response) => {
 
 app.get("/register", (request, response) => {
   const templateVars = {
-    username: request.cookies["userID"]
+    username: request.cookies["userID"],
+    error: request.cookies["error"]
   };
+  response.clearCookie("error");
   response.render("pages/register", {templateVars})
 });
 
 app.post("/register", (request, response) => {
   //response.send(request.body);
+  let errorMessage = "";
+
+  // Check email is empty
+  if (request.body.email === "") {
+    errorMessage += "Email cannot be empty\n";
+  }
+  // Check password is empty
+  if( request.body.password === "") {
+    errorMessage += "Password cannot be empty";
+  }
+
+  // Check if email existed
+  if (checkExistedEmail(request.body.email) === true) {
+    errorMessage += "Email existed, please choose other email";
+  }
+  if (errorMessage !== "") {
+    response.cookie("error", errorMessage);
+    response.redirect('/register');
+  }
   const newUserID = generateRandomString(6);
   
   const newUserObj = {
