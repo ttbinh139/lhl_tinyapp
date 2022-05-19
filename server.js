@@ -6,44 +6,44 @@ const app = express();
 const PORT = 8080;
 
 const bodyParser = require("body-parser");
-app.use(bodyParser.urlencoded({extended: true}));
+app.use(bodyParser.urlencoded({ extended: true }));
 
 const cookieParser = require("cookie-parser");
 app.use(cookieParser());
 
 const urlDatabases = {
-  '1a2b3c' : {
-    longURL:  "https://www.lighthouselabs.ca",
+  '1a2b3c': {
+    longURL: "https://www.lighthouselabs.ca",
     userID: "userRandomID"
   },
-  '2b3c4d' : {
+  '2b3c4d': {
     longURL: "https:///www.google.ca",
     userID: "user2RandomID"
   },
-  '2b3c4e' : {
+  '2b3c4e': {
     longURL: "https:///www.cbc.ca",
     userID: "user2RandomID"
   },
-  '2b3c4f' : {
+  '2b3c4f': {
     longURL: "https:///bbc.co.uk",
     userID: "user2RandomID"
   }
 };
 
-const users = { 
+const users = {
   "userRandomID": {
-    id: "userRandomID", 
-    email: "user@example.com", 
+    id: "userRandomID",
+    email: "user@example.com",
     password: "purple-monkey-dinosaur"
   },
- "user2RandomID": {
-    id: "user2RandomID", 
-    email: "user2@example.com", 
+  "user2RandomID": {
+    id: "user2RandomID",
+    email: "user2@example.com",
     password: "dishwasher-funk"
   }
-}
+};
 
-const checkExistedEmail = function(email) {
+const checkExistedEmail = function (email) {
   //let result = false;
   for (const idx in users) {
     //console.log(user);
@@ -52,23 +52,23 @@ const checkExistedEmail = function(email) {
     }
   }
   return false;
-}
+};
 
-const checkValidUser = function(email, password) {
+const checkValidUser = function (email, password) {
   for (const idx in users) {
     //console.log(user);
     //console.log(email);
     ///console.log(password);
     //console.log("user", users[idx]);
     if (users[idx]["email"] === email && users[idx]["password"] === password) {
-     // console.log("valid");
+      // console.log("valid");
       return idx;
     }
   }
   return false;
-}
+};
 
-const findUrlsByUserID = function(userID) {
+const findUrlsByUserID = function (userID) {
   let urls = {};
   //console.log("find URLs by userID", urlDatabases);
   for (const idx in urlDatabases) {
@@ -80,7 +80,7 @@ const findUrlsByUserID = function(userID) {
   }
 
   return urls;
-}
+};
 
 
 // Set template engine
@@ -88,7 +88,7 @@ app.set('view engine', 'ejs');
 
 // Routing index page
 app.get('/', (request, response) => {
-  
+
   const userID = request.cookies["userID"];
   // Check if user loggin
   if (userID !== undefined) {
@@ -99,7 +99,7 @@ app.get('/', (request, response) => {
 });
 
 app.get('/urls', (request, response) => {
-  
+
   const userID = request.cookies["userID"];
   if (userID !== null) {
     const listUrls = findUrlsByUserID(userID);
@@ -108,7 +108,7 @@ app.get('/urls', (request, response) => {
     const templateVars = {
       username: request.cookies["userID"]
     };
-    const urls = {urls: listUrls, templateVars: templateVars};
+    const urls = { urls: listUrls, templateVars: templateVars };
     response.render("pages/index.ejs", urls);
   }
 });
@@ -132,7 +132,7 @@ app.get('/new', (request, response) => {
   // check logged user
   const userID = request.cookies["userID"];
   if (userID != null) {
-    response.render("pages/new", {templateVars});
+    response.render("pages/new", { templateVars });
   } else {
     response.redirect("/login");
   }
@@ -161,12 +161,17 @@ app.post("/new", (request, response) => {
 
 // Update URL
 app.post("/update/:shortURL", (request, response) => {
-  //response.send(request.body.longURL);
-  const shortURL = request.params.shortURL;
-  const longURL = request.body.longURL;
-  urlDatabases[shortURL] = longURL;
-  //response.send(urlDatabases);
-  response.redirect("/");
+  const userID = request.cookies["userID"];
+  if (userID != null) {
+    const shortURL = request.params.shortURL;
+    const longURL = request.body.longURL;
+    urlDatabases[shortURL]["longURL"] = longURL;
+    //response.send(urlDatabases);
+    response.redirect("/");
+  } else {
+    response.sendStatus(400);
+  }
+
 });
 
 // Redirec URL
@@ -178,15 +183,19 @@ app.get("/u/:shortURL", (request, response) => {
     //response.cookie("error", "LongURL not found")
     response.redirect(`/urls/${request.params.shortURL}`);
   }
-})
+});
 
 // Delete URL
-app.get("/delete/:shortURL", (request, response) => {
-  //response.send(request.params);
-  const shortURL = request.params.shortURL;
-  //response.send(shortURL);
-  delete urlDatabases[shortURL];
-  response.redirect("/");
+app.post("/delete/:shortURL", (request, response) => {
+  const userID = request.cookies["userID"];
+  if (userID != null) {
+    const shortURL = request.params.shortURL;
+    //response.send(shortURL);
+    delete urlDatabases[shortURL];
+    response.redirect("/");
+  } else {
+    response.sendStatus(400);
+  }
 });
 
 // About pages
@@ -202,7 +211,7 @@ app.get('/login', (request, response) => {
   };
   response.clearCookie("error");
   //response.clearCookie("username");
-  response.render('pages/login', {templateVars});
+  response.render('pages/login', { templateVars });
 });
 
 app.post('/login', (request, response) => {
@@ -214,7 +223,7 @@ app.post('/login', (request, response) => {
     errorMessage += "Email cannot be empty\n";
   }
   // Check password is empty
-  if( request.body.password === "") {
+  if (request.body.password === "") {
     errorMessage += "Password cannot be empty";
   }
   // Check valid user information
@@ -249,7 +258,7 @@ app.get("/register", (request, response) => {
     error: request.cookies["error"]
   };
   response.clearCookie("error");
-  response.render("pages/register", {templateVars})
+  response.render("pages/register", { templateVars })
 });
 
 app.post("/register", (request, response) => {
@@ -261,7 +270,7 @@ app.post("/register", (request, response) => {
     errorMessage += "Email cannot be empty\n";
   }
   // Check password is empty
-  if( request.body.password === "") {
+  if (request.body.password === "") {
     errorMessage += "Password cannot be empty";
   }
 
@@ -274,18 +283,18 @@ app.post("/register", (request, response) => {
     response.redirect('/register');
   }
   const newUserID = generateRandomString(6);
-  
+
   const newUserObj = {
     id: newUserID,
     email: request.body.email,
     password: request.body.password
   };
-  
+
   users[newUserID] = newUserObj;
   //response.send(users);
   response.cookie("userID", newUserID);
   response.redirect("/");
-})
+});
 
 app.listen(PORT, () => {
   console.log(`Server running at ${PORT}`);

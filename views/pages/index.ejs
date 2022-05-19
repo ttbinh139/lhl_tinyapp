@@ -11,7 +11,8 @@
 
 <main>
   <div class="jumbotron">
-    <h2>My Urls</h2>
+    <% if (templateVars.username) { %>
+      <h2>My Urls</h2>
     <table class="table">
       <thead>
         <tr>
@@ -28,7 +29,7 @@
             <td><%= urls[url]['longURL'] %></td>
             <td><a href="/urls/<%= url %>">Edit</a></td>
             <td>
-              <form mothod="POST" action="/delete/<%= url %>">
+              <form method="POST" action="/delete/<%= url %>">
                 <input type="submit" value="Delete">
               </form>
             </td>
@@ -37,6 +38,15 @@
         <% } %>
       </tbody>
     </table>
+    <% } else { %>
+      <div class="card text-center">
+        <div class="card-header"></div>
+        <div class="card-body">
+          <h5 class="card-text">You need login to see your urls</h5>
+        </div>
+      </div>
+    <% } %>
+    
   </div>
 </main>
 
