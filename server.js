@@ -1,6 +1,8 @@
 const { response } = require("express");
 const { generateRandomString } = require('./helper');
 
+const bcrypt = require('bcryptjs');
+
 const express = require("express");
 const app = express();
 const PORT = 8080;
@@ -60,7 +62,8 @@ const checkValidUser = function (email, password) {
     //console.log(email);
     ///console.log(password);
     //console.log("user", users[idx]);
-    if (users[idx]["email"] === email && users[idx]["password"] === password) {
+    let hashPassword = users[idx]["password"];
+    if (users[idx]["email"] === email && bcrypt.compareSync(password, hashPassword) === true) {
       // console.log("valid");
       return idx;
     }
@@ -284,14 +287,18 @@ app.post("/register", (request, response) => {
   }
   const newUserID = generateRandomString(6);
 
+  const salt = bcrypt.genSaltSync(10);
+  //console.log(request.body.password);
+  const hashPassword = bcrypt.hashSync(request.body.password, salt);
+  //console.log(hashPassword);
   const newUserObj = {
     id: newUserID,
     email: request.body.email,
-    password: request.body.password
+    password: hashPassword
   };
 
   users[newUserID] = newUserObj;
-  //response.send(users);
+  //console.log(users);
   response.cookie("userID", newUserID);
   response.redirect("/");
 });
