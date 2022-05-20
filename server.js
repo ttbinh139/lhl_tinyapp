@@ -10,8 +10,14 @@ const PORT = 8080;
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({ extended: true }));
 
-const cookieParser = require("cookie-parser");
-app.use(cookieParser());
+/* const cookieParser = require("cookie-parser");
+app.use(cookieParser()); */
+
+const cookieSession = require('cookie-session');
+app.use(cookieSession({
+  name: 'session',
+  keys: ['key1', 'key2']
+}));
 
 const urlDatabases = {
   '1a2b3c': {
@@ -63,6 +69,8 @@ const checkValidUser = function (email, password) {
     ///console.log(password);
     //console.log("user", users[idx]);
     let hashPassword = users[idx]["password"];
+    //console.log(hashPassword);
+    //console.log(bcrypt.compareSync(password, hashPassword));
     if (users[idx]["email"] === email && bcrypt.compareSync(password, hashPassword) === true) {
       // console.log("valid");
       return idx;
@@ -92,7 +100,11 @@ app.set('view engine', 'ejs');
 // Routing index page
 app.get('/', (request, response) => {
 
-  const userID = request.cookies["userID"];
+  //const userID = request.cookies["userID"];
+  console.log("Read userID from cookie");
+  const userID = request.session.userID;
+  request.session.userID
+  console.log(userID);
   // Check if user loggin
   if (userID !== undefined) {
     response.redirect("/urls");
@@ -103,13 +115,14 @@ app.get('/', (request, response) => {
 
 app.get('/urls', (request, response) => {
 
-  const userID = request.cookies["userID"];
+  //const userID = request.cookies["userID"];
+  const userID = request.session.userID;
   if (userID !== null) {
     const listUrls = findUrlsByUserID(userID);
     //response.send(urlDatabases);
     //console.log("Click to myurl:", listUrls);
     const templateVars = {
-      username: request.cookies["userID"]
+      username: userID
     };
     const urls = { urls: listUrls, templateVars: templateVars };
     response.render("pages/index.ejs", urls);
@@ -119,7 +132,7 @@ app.get('/urls', (request, response) => {
 // View a URL
 app.get("/urls/:shortURL", (request, response) => {
   const templateVars = {
-    username: request.cookies["userID"]
+    username: request.session.userID //request.cookies["userID"]
   };
   //response.send(urlDatabases);
   //console.log("View URL after created: ", urlDatabases);
@@ -129,11 +142,11 @@ app.get("/urls/:shortURL", (request, response) => {
 
 // Create new url
 app.get('/new', (request, response) => {
+  const userID = request.session.userID;
   const templateVars = {
-    username: request.cookies["userID"]
+    username:  userID//;request.cookies["userID"]
   };
-  // check logged user
-  const userID = request.cookies["userID"];
+  
   if (userID != null) {
     response.render("pages/new", { templateVars });
   } else {
@@ -145,7 +158,8 @@ app.post("/new", (request, response) => {
   /* const templateVars = {
     username: request.cookies["username"]
   }; */
-  const userID = request.cookies["userID"];
+  //const userID = request.cookies["userID"];
+  const userID = request.session.userID;;
   if (userID != null) {
     const randomString = generateRandomString(6);
     const newUrl = {
@@ -164,7 +178,8 @@ app.post("/new", (request, response) => {
 
 // Update URL
 app.post("/update/:shortURL", (request, response) => {
-  const userID = request.cookies["userID"];
+  //const userID = request.cookies["userID"];
+  const userID = request.session.userID;;
   if (userID != null) {
     const shortURL = request.params.shortURL;
     const longURL = request.body.longURL;
@@ -190,7 +205,8 @@ app.get("/u/:shortURL", (request, response) => {
 
 // Delete URL
 app.post("/delete/:shortURL", (request, response) => {
-  const userID = request.cookies["userID"];
+  //const userID = request.cookies["userID"];
+  const userID = request.session.userID;
   if (userID != null) {
     const shortURL = request.params.shortURL;
     //response.send(shortURL);
@@ -208,12 +224,13 @@ app.get('/about', (request, response) => {
 
 // Login pages
 app.get('/login', (request, response) => {
+  //console.log("Login page:", request.session);
   const templateVars = {
-    username: request.cookies["userID"],
-    error: request.cookies["error"]
+    username: request.session.userID, //;request.cookies["userID"],
+    error: request.session.error
   };
-  response.clearCookie("error");
-  //response.clearCookie("username");
+  //console.log("Login page: ", templateVars);
+  request.session.error = null;
   response.render('pages/login', { templateVars });
 });
 
@@ -239,28 +256,36 @@ app.post('/login', (request, response) => {
     }
   }
   if (errorMessage !== "") {
-    response.cookie("error", errorMessage);
+    //console.log("error", errorMessage);
+    //response.cookie("error", errorMessage);
+    request.session.error = errorMessage;
     response.redirect('/login');
   } else {
     //response.send(username);
-    response.cookie("userID", userID);
+    //response.cookie("userID", userID);
+    //console.log("Correct userID, let set cookie", userID);
+    request.session.userID = userID;
+    //response.session.userID = userID;
+    //console.log("Set cookie successfully", request.session.userID);
     //response.render('pages/login')
     response.redirect("/");
   }
 });
 
 app.post("/logout", (request, response) => {
-  response.clearCookie("userID");
-  response.clearCookie("error");
+  /* response.clearCookie("userID");
+  response.clearCookie("error"); */
+  request.session = null
   response.redirect("/");
 });
 
 app.get("/register", (request, response) => {
   const templateVars = {
-    username: request.cookies["userID"],
-    error: request.cookies["error"]
+    username: request.session.userID,
+    error: request.session.error
   };
-  response.clearCookie("error");
+  //response.clearCookie("error");
+  request.session.error = null;
   response.render("pages/register", { templateVars })
 });
 
@@ -282,7 +307,8 @@ app.post("/register", (request, response) => {
     errorMessage += "Email existed, please choose other email";
   }
   if (errorMessage !== "") {
-    response.cookie("error", errorMessage);
+    //response.cookie("error", errorMessage);
+    request.session.error = errorMessage;
     response.redirect('/register');
   }
   const newUserID = generateRandomString(6);
@@ -298,9 +324,10 @@ app.post("/register", (request, response) => {
   };
 
   users[newUserID] = newUserObj;
-  //console.log(users);
-  response.cookie("userID", newUserID);
-  response.redirect("/");
+  //console.log("Register new user successfully, redirect to login page", users);
+  //response.cookie("userID", newUserID);
+  //request.session.userID = newUserID;
+  response.redirect("/login");
 });
 
 app.listen(PORT, () => {
