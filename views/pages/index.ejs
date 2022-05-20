@@ -29,7 +29,7 @@
             <td><%= urls[url]['longURL'] %></td>
             <td><a href="/urls/<%= url %>">Edit</a></td>
             <td>
-              <form method="POST" action="/delete/<%= url %>">
+              <form method="POST" action="/urls/<%= url %>/delete">
                 <input type="submit" value="Delete">
               </form>
             </td>
