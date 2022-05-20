@@ -2,7 +2,7 @@
 // Load constant, dummy database and helper
 require('./constant');
 const { urlDatabases, userDatabases } = require('./dummyData');
-const { generateRandomString, checkExistedEmail, checkValidUser, findUrlsByUserID } = require('./helper');
+const { generateRandomString, checkExistedEmail, checkValidUser, findUrlsByUserID, findUserEmailFromID } = require('./helper');
 
 const bcrypt = require('bcryptjs');
 
@@ -31,8 +31,9 @@ app.set('view engine', 'ejs');
 app.get('/', (request, response) => {
   // Get userID from cookie
   const userID = request.session.userID;
+  console.log(userID);
   // Check if user logged in
-  if (userID !== undefined) {
+  if (userID !== null) {
     // Redirect to /urls
     response.redirect("/urls");
   } else {
@@ -50,6 +51,7 @@ app.get('/', (request, response) => {
 app.get('/urls', (request, response) => {
   // Get userID from cookie
   const userID = request.session.userID;
+  const userEmail = findUserEmailFromID(userID, userDatabases);
 
   // If cookie contain userID
   if (userID !== null) {
@@ -58,7 +60,7 @@ app.get('/urls', (request, response) => {
 
     // Init template variables to pass to emplate engine
     const templateVars = {
-      username: userID
+      userEmail: userEmail
     };
     const urls = { urls: listUrls, templateVars: templateVars };
     // Render index.ejs with template variables
@@ -73,12 +75,20 @@ app.get('/urls', (request, response) => {
  * Not logged user: can view, cannot edit.
  */
 app.get("/urls/:shortURL", (request, response) => {
+  // Get userID from cookie
+  const userID = request.session.userID;
+  const userEmail = findUserEmailFromID(userID, userDatabases);
+
   // Init template variables to pass to emplate engine
   // Template variable contain username get from cookie
   const templateVars = {
-    username: request.session.userID
+    userEmail: userEmail
   };
-  const url = { shortURL: request.params.shortURL, longURL: urlDatabases[request.params.shortURL], templateVars: templateVars };
+  const url = {
+    shortURL: request.params.shortURL,
+    longURL: urlDatabases[request.params.shortURL],
+    templateVars: templateVars
+  };
 
   // Call render page with template variables
   response.render("pages/urls_show", url);
@@ -92,11 +102,12 @@ app.get("/urls/:shortURL", (request, response) => {
 app.get('/new', (request, response) => {
   // Get userID from cookie
   const userID = request.session.userID;
+  const userEmail = findUserEmailFromID(userID, userDatabases);
   // If has userID
   if (userID != null) {
     // Init template variables with userID from cookie
     const templateVars = {
-      username: userID//;request.cookies["userID"]
+      userEmail: userEmail//;request.cookies["userID"]
     };
     response.render("pages/new", { templateVars });
   } else {
@@ -116,10 +127,14 @@ app.post("/new", (request, response) => {
   if (userID != null) {
     // Generate random string for short URL
     const randomString = generateRandomString(6);
+    const creationDate = new Date().toDateString();
     // Create new URL object
     const newUrl = {
       longURL: request.body.longURL,
-      userID: userID
+      userID: userID,
+      creationDate: creationDate,
+      numberOfVisits: 0,
+      numberOfUniqueVisits: 0
     }
     // Add new URL object to urlDatabase
     urlDatabases[randomString] = newUrl;
@@ -160,8 +175,21 @@ app.post("/update/:shortURL", (request, response) => {
  */
 app.get("/u/:shortURL", (request, response) => {
   // Get longURL from urlDatabses
+  console.log(urlDatabases);
   const longUrl = urlDatabases[request.params.shortURL]["longURL"];
   if (longUrl !== undefined) {
+    // Update number of visit for this specific short url
+    urlDatabases[request.params.shortURL]["numberOfVisits"]++;
+
+    // Increase number of unique visits if doesn't have cookie visited.
+    const visited = request.session.visited;
+    if (visited !== 1) {
+      urlDatabases[request.params.shortURL]["numberOfUniqueVisits"]++;
+
+      // Set cookie for unique visit
+      request.session.visited = 1;
+    }
+
     // Redirect to longURL
     response.redirect(longUrl);
   } else {
@@ -182,12 +210,20 @@ app.post("/urls/:shortURL/delete", (request, response) => {
   if (userID != null) {
     // Get shortURL from request paramerters
     const shortURL = request.params.shortURL;
-    // Delete shortURL from urlDatabases
-    delete urlDatabases[shortURL];
-    // Redirect to homepages
-    response.redirect("/");
+
+    // Check if the shorten URL belongs to logged in user
+    if (urlDatabases[shortURL]["userID"] === userID) {
+      // Delete shortURL from urlDatabases
+      delete urlDatabases[shortURL];
+      // Redirect to homepages
+      response.redirect("/");
+    } else {
+      // Send back bad request status code
+      return response.sendStatus(400);  
+    }
   } else {
-    response.sendStatus(400);
+    // Send back bad request status code
+    return response.sendStatus(400);
   }
 });
 
@@ -200,9 +236,10 @@ app.get('/about', (request, response) => {
  * GET -> handle login page
  */
 app.get('/login', (request, response) => {
+
   // Init template variables contain username and error message from cookie
   const templateVars = {
-    username: request.session.userID,
+    userEmail: request.session.userID,
     error: request.session.error
   };
   // Clear error message from cookie
@@ -257,8 +294,8 @@ app.post('/login', (request, response) => {
  * POST: handle logout
  */
 app.post("/logout", (request, response) => {
-  // Clear cookie
-  request.session = null;
+  // Clear userID in cookie
+  request.session.userID = null;
   // Redirect to homepage
   response.redirect("/");
 });
@@ -269,7 +306,7 @@ app.post("/logout", (request, response) => {
 app.get("/register", (request, response) => {
   // Init template variables with username and error message in order to display if has some errors.
   const templateVars = {
-    username: request.session.userID,
+    userEmail: request.session.userID,
     error: request.session.error
   };
   // Clear error message from cookie

@@ -14,10 +14,10 @@
   </ul>
   <ul class="navbar-nav ml-auto">
     <li class="nav-item">
-      <% if (templateVars.username) { %>
+      <% if (templateVars.userEmail) { %>
         <form class="form-inline" method="post" action="/logout">
           <div class="form-group mb-2">
-            <span class="pr-3">Hello <%= templateVars.username %></span>
+            <span class="pr-3">Hello <%= templateVars.userEmail %></span>
             <button type="submit" class="btn btn-primary">Logout</button>
           </div>
         </form>

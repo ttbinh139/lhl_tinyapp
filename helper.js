@@ -86,5 +86,12 @@ const findUrlsByUserID = function (userID, urlDatabases) {
   return urlResults;
 };
 
+const findUserEmailFromID = function(userID, userDatabases) {
+  if (userDatabases[userID]) {
+    return userDatabases[userID]["email"];
+  }
+  return undefined;
+}
+
 // Export all helper functions
-module.exports = { generateRandomString, checkExistedEmail, checkValidUser, findUrlsByUserID };
+module.exports = { generateRandomString, checkExistedEmail, checkValidUser, findUrlsByUserID, findUserEmailFromID };

@@ -1,6 +1,6 @@
 const assert = require('chai').assert;
 
-const { checkExistedEmail, findUrlsByUserID } = require('../helper');
+const { checkExistedEmail, findUrlsByUserID, findUserEmailFromID } = require('../helper');
 
 const userDatabases = {
   "userRandomID": {
@@ -61,5 +61,17 @@ describe("#findUrlsByUserID", () => {
       userID: "userRandomID"
     }};
     assert.deepEqual(findUrlsByUserID(userID, urlDatabases), url);
+  });
+});
+
+describe("#findUserEmailFromID", () => {
+  it("#findUserEmailFromID return undefined if userID doesn't existed", () => {
+    const userID = "anyUser";
+    assert.isUndefined(findUserEmailFromID(userID, urlDatabases));
+  });
+
+  it("#findUserEmailFromID return email belongs to userID", () => {
+    const userID = "userRandomID";
+    assert.deepEqual(findUserEmailFromID(userID, userDatabases), "user@example.com");
   });
 });

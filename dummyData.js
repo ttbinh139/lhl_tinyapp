@@ -8,19 +8,31 @@
 const urlDatabases = {
   '1a2b3c': {
     longURL: "https://www.lighthouselabs.ca",
-    userID: "userRandomID"
+    userID: "userRandomID",
+    creationDate: "2022-05-19 20:41:22",
+    numberOfVisits: 3,
+    numberOfUniqueVisits: 2
   },
   '2b3c4d': {
     longURL: "https:///www.google.ca",
-    userID: "user2RandomID"
+    userID: "user2RandomID",
+    creationDate: "2022-05-19 20:41:22",
+    numberOfVisits: 3,
+    numberOfUniqueVisits: 2
   },
   '2b3c4e': {
     longURL: "https:///www.cbc.ca",
-    userID: "user2RandomID"
+    userID: "user2RandomID",
+    creationDate: "2022-05-19 20:41:22",
+    numberOfVisits: 3,
+    numberOfUniqueVisits: 2
   },
   '2b3c4f': {
     longURL: "https:///bbc.co.uk",
-    userID: "user2RandomID"
+    userID: "user2RandomID",
+    creationDate: "2022-05-19 20:41:22",
+    numberOfVisits: 3,
+    numberOfUniqueVisits: 2
   }
 };
 

@@ -22,9 +22,12 @@
             <p class="card-text">Short URL: <a href="/u/<%= shortURL %>">
                 <%= shortURL %>
               </a></p>
+              <p class="card-text">Creation Date: <%= longURL["creationDate"] %></p>
+              <p class="card-text">Number of visits: <%= longURL["numberOfVisits"] %></p>
+              <p class="card-text">Number of unique visits: <%= longURL["numberOfUniqueVisits"] %></p>
           </div>
         </div>
-        <% if (templateVars.username) { %>
+        <% if (templateVars.userEmail) { %>
           <div class="card text-center">
             <div class="card-header"></div>
             <div class="card-body">
